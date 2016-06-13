@@ -1,0 +1,10 @@
+[Server]
+iface = "enp3s0"
+#Interface to listen on
+driver = "libpcap"
+worker_num = 24
+
+[Log]
+level = "INFO"
+#FINE|DEBUG|TRACE|INFO|WARN|ERROR"
+
