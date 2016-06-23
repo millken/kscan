@@ -82,13 +82,13 @@ func (s *server) sendPackets() {
 		ComputeChecksums: true,
 	}
 	p.Ethernet = &layers.Ethernet{
-		SrcMAC:       net.HardwareAddr{0x00, 0x1B, 0x21, 0xA7, 0x9A, 0x34},
-		DstMAC:       net.HardwareAddr{0x00, 0x1B, 0x21, 0x98, 0xE8, 0x8C},
+		SrcMAC:       net.HardwareAddr{0x00, 0x1B, 0x21, 0x99, 0x2A, 0x05},
+		DstMAC:       net.HardwareAddr{0x00, 0x1B, 0x21, 0x99, 0x2A, 0x04},
 		EthernetType: layers.EthernetTypeIPv4,
 	}
 	p.Ipv4 = &layers.IPv4{
-		SrcIP:    net.IP{192, 168, 5, 84},
-		DstIP:    net.IP{192, 168, 5, 85},
+		SrcIP:    net.IP{192, 168, 55, 99},
+		DstIP:    net.IP{192, 168, 55, 100},
 		Protocol: layers.IPProtocolUDP,
 		TTL:      64,
 		IHL:      5,
@@ -105,13 +105,13 @@ func (s *server) sendPackets() {
 	gopacket.SerializeLayers(buf, opts, p.Ethernet, p.Ipv4, p.Udp, gopacket.Payload(out))
 
 	start := time.Now()
-	for i := 0; i < 1000000; i++ {
+	for i := 0; i < 10000000; i++ {
 		err = s.io.WritePacketData(buf.Bytes())
 		//	if err != nil {
 		//	log.Fatalf("write packet data err : %+v", err)
 		//}
 
-		//s.stats.Tx.Packets++
+		s.stats.Tx.Packets++
 		//d.stats.Tx.Bytes += uint64(p.Metadata().CaptureInfo.CaptureLength)
 	}
 	end := time.Now()
