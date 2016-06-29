@@ -1,6 +1,7 @@
 module(..., package.seeall)
 local ffi = require("ffi")
 local packet = require("core.packet")
+local utils = require("program.kscan.utils")
 Processer = {}
 
 function Processer:new ()
@@ -10,20 +11,18 @@ end
 
 function Processer:push()
    local i = assert(self.input.input, "input port not found")
-   local o = assert(self.output.output, "output port not found")
 
    for _ = 1, link.nreadable(i) do
-      self:process_packet(i, o)
+      self:process_packet(i)
       self.packet_counter = self.packet_counter + 1
    end
 
 end
 
-
-function Processer:process_packet(i, o)
+function Processer:process_packet(i)
    local p = link.receive(i)	
 	local s = ffi.string(p.data, p.length)
-	print("FIB: ".. s)
+	--utils.hexdump(s)
    --link.transmit(o, p)
 	packet.free(p)
 end
