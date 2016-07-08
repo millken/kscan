@@ -16,3 +16,19 @@ function hexdump(buf)
 		io.write(' ',chunk:gsub('%c','.'),"\n") 
 	end
 end
+
+function num_prefix (num)
+   if num > 1e12 then
+      return string.format("%0.2fT", tostring(num / 1e12))
+   end
+   if num > 1e9 then
+      return string.format("%0.2fG", tostring(num / 1e9))
+   end
+   if num > 1e6 then
+      return string.format("%0.2fM", tostring(num / 1e6))
+   end
+   if num > 1e3 then
+      return string.format("%0.2fk", tostring(num / 1e3))
+   end
+   return string.format("%0.2f", tostring(num))
+end
