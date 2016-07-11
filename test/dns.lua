@@ -43,9 +43,10 @@ end
 
 function B:pull ()
    local dg_tx = datagram:new()
-   local src = ethernet:pton("02:00:00:00:00:01")
-   local dst = ethernet:pton("02:00:00:00:00:02")
-   local localhost = ipv4:pton("127.0.0.1")
+   local src = ethernet:pton("00:1B:21:99:2A:04")
+   local dst = ethernet:pton("00:1B:21:99:2A:05")
+   local ip_src = ipv4:pton("192.168.55.100")
+   local ip_dst = ipv4:pton("192.168.55.101")
    local req,err = dns.encode {
 	id       = 1234,
 	query    = true,
@@ -62,8 +63,8 @@ function B:pull ()
 	dg_tx:push_raw(req, string.len(req))
    dg_tx:push(udp:new({src_port = 4462,
 					   dst_port = 53}))
-   dg_tx:push(ipv4:new({src = localhost,
-                        dst = localhost,
+   dg_tx:push(ipv4:new({src = ip_src,
+                        dst = ip_dst,
 						protocol = 17, --udp 0x11
                         ttl = 64}))
    dg_tx:push(ethernet:new({src = src,
