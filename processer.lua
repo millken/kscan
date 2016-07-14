@@ -39,9 +39,10 @@ end
 
 function Processer:push()
    local i = assert(self.input.input, "input port not found")
+   local o = assert(self.ouput.ouput, "output port not found")
 
    for _ = 1, link.nreadable(i) do
-      self:process_packet(i)
+      self:process_packet(i, o)
    end
 
 end
@@ -49,14 +50,14 @@ end
 function Processer:pull()
 end
 
-function Processer:process_packet(i)
+function Processer:process_packet(i, o)
    local p = link.receive(i)	
 	local counters = self.counters
    counter.add(counters["push_packets"])
 	local s = ffi.string(p.data, p.length)
-	--utils.hexdump(s)
-   --link.transmit(o, p)
-	packet.free(p)
+	utils.hexdump(s)
+   link.transmit(o, p)
+	--packet.free(p)
 end
 
 function Processer:report()

@@ -9,6 +9,7 @@ local basic_apps = require("apps.basic.basic_apps")
 local pci      = require("lib.hardware.pci")
 local lib      = require("core.lib")
 local C = require("ffi").C
+local sourceChan = testdns.A
 
 function run (parameters)
    if not (#parameters == 1) then
@@ -23,6 +24,18 @@ function run (parameters)
    ]]
 
    --local pcideva = lib.getenv("SNABB_PCI_INTEL0") or lib.getenv("SNABB_PCI0")
+   local source = lib.getenv("SNABB_SOURCE")
+   if not source then
+	   sourceChan = testdns.C
+   elseif source == "testdns.A" then
+	   sourceChan = testdns.A
+	elseif source == "testdns.B" then
+	   sourceChan = testdns.B
+	elseif source == "testdns.C" then
+	   sourceChan = testdns.C
+	elseif source == "testdns.D" then
+	   sourceChan = testdns.D
+   end
    local pcidevb = lib.getenv("SNABB_PCI_INTEL1") or lib.getenv("SNABB_PCI1")
     if --not pcideva
       --or pci.device_info(pcideva).driver ~= 'apps.intel.intel_app'
@@ -47,7 +60,7 @@ function run (parameters)
    config.link(c, "pr.output -> rr.rx")
 	--]]
 
-   config.app(c, "source", testdns.B)
+   config.app(c, "source", sourceChan)
   -- config.app(c, "pr", Processer.Processer)
    --config.app(c, 'source1', basic_apps.Source)
    config.app(c, 'sink', Processer.Sink)
@@ -60,7 +73,7 @@ function run (parameters)
    --config.app(c, 'nicA', Intel82599, {pciaddr=pcideva})
    config.app(c, 'nicB', Intel82599, {pciaddr=pcidevb})
    --config.app(c, 'sink', basic_apps.Sink)
-   --config.link(c, 'nicB.tx -> sink.in1')
+   config.link(c, 'nicB.tx -> sink.in1')
    --config.link(c, 'nicA.tx -> nicB.rx')
    config.link(c, 'source.output -> nicB.rx')
    --config.link(c, 'source2.out -> nicB.rx')
