@@ -86,10 +86,10 @@ end
 
 function C:pull ()
    local dg_tx = datagram:new()
-   local src = ethernet:pton("00:1B:21:99:2A:04")
-   local dst = ethernet:pton("00:1B:21:99:2A:05")
-   local ip_src = ipv4:pton("192.168.55.100")
-   local ip_dst = ipv4:pton("192.168.55.101")
+   local src = ethernet:pton(lib.getenv("ETH_SRC"))
+   local dst = ethernet:pton(lib.getenv("ETH_DST"))
+   local ip_src = ipv4:pton(lib.getenv("IP_SRC"))
+   local ip_dst = ipv4:pton(lib.getenv("IP_DST"))
    dg_tx:push(udp:new({src_port = 4462,
 					   dst_port = 53}))
    dg_tx:push(ipv4:new({src = ip_src,
@@ -134,28 +134,31 @@ function D:new ()
 	 self.udp = udp:new_from_mem(self.p.data + eth_size + ipv4_size, udp_size)
 	 self.req = req
 	 packet.append(self.p, self.req, #self.req)
-     return setmetatable(self, {__index=D}) 
-  end 
-  
-  function D:pull() 
-	self.eth:src(ethernet:pton("00:1B:21:99:2A:04"))
-	self.eth:dst(ethernet:pton("00:1B:21:99:2A:05"))
+	self.eth:src(ethernet:pton(lib.getenv("ETH_SRC")))
+	self.eth:dst(ethernet:pton(lib.getenv("ETH_DST")))
 	self.eth:type(0x0800)
 	self.ipv4:ihl(ipv4:sizeof() / 4)
+	self.ipv4:version(4)
 	self.ipv4:dscp(0)
 	self.ipv4:ecn(0)
 	self.ipv4:total_length(ipv4:sizeof() + udp:sizeof() + #self.req)
 	self.ipv4:id(0)
 	self.ipv4:flags(0)
 	self.ipv4:frag_off(0)
-	self.ipv4:src(ipv4:pton("192.168.55.100"))
-	self.ipv4:dst(ipv4:pton("192.168.55.101"))
+	self.ipv4:src(ipv4:pton(lib.getenv("IP_SRC")))
+	self.ipv4:dst(ipv4:pton(lib.getenv("IP_DST")))
 	self.ipv4:protocol(17)
 	self.ipv4:ttl(64)
 	self.ipv4:checksum()
 	self.udp:src_port(4462)
 	self.udp:dst_port(53)
 	self.udp:length(udp:sizeof() + #self.req)
+	self.udp:checksum(ffi.cast("char*",self.req), #self.req, self.ipv4)
+     return setmetatable(self, {__index=D}) 
+  end 
+  
+  function D:pull() 
+
 
     for _, o in ipairs(self.output) do 
        for i = 1, link.nwritable(o) do 
