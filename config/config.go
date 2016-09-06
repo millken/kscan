@@ -8,34 +8,36 @@ import (
 	"github.com/BurntSushi/toml"
 )
 
-type Config struct {
-	Server ServerConf
-	Log    LogConf
-}
-
-type ServerConf struct {
+type MasterConf struct {
 	Iface, Driver string
-	WorkerNum     int `toml:"worker_num"`
+	WorkerNum     int    `toml:"worker_num"`
+	LogFile       string `toml:"log_file"`
+	LogLevel      string `toml:"log_level"`
 }
 
-type LogConf struct {
-	File  string
-	Level string
-}
+type ModeConf map[string]toml.Primitive
 
-func Load(configPath string) (config *Config, err error) {
+func Load(configPath string) (masterConfig *MasterConf, modeConfig ModeConf, err error) {
 
+	var configFile ModeConf
 	p, err := os.Open(configPath)
 	if err != nil {
-		return nil, fmt.Errorf("Error opening config file: %s", err)
+		return nil, nil, fmt.Errorf("Error opening config file: %s", err)
 	}
 	contents, err := ioutil.ReadAll(p)
 	if err != nil {
-		return nil, fmt.Errorf("Error reading config file: %s", err)
+		return nil, nil, fmt.Errorf("Error reading config file: %s", err)
 	}
-	if _, err = toml.Decode(string(contents), &config); err != nil {
-		return nil, fmt.Errorf("Error decoding config file: %s", err)
+	if _, err = toml.Decode(string(contents), &configFile); err != nil {
+		return nil, nil, fmt.Errorf("Error decoding config file: %s", err)
 	}
-
-	return config, nil
+	parsed_config, ok := configFile["master"]
+	if ok {
+		if err = toml.PrimitiveDecode(parsed_config, &masterConfig); err != nil {
+			err = fmt.Errorf("Can't unmarshal master config: %s", err)
+		}
+	}
+	modeConfig = configFile
+	delete(modeConfig, "master")
+	return
 }

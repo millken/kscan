@@ -1,10 +1,12 @@
-[Server]
+[master]
 iface = "enp3s0"
 #Interface to listen on
 driver = "libpcap"
 worker_num = 24
-
-[Log]
-level = "INFO"
+log_file = ""
+log_level = "FINE"
 #FINE|DEBUG|TRACE|INFO|WARN|ERROR"
 
+[sample]
+src_mac = "ad:sd:sd"
+dst_mac = "3l3l3l3l3l"

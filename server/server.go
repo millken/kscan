@@ -21,7 +21,7 @@ import (
 const BPFFilter = "udp"
 
 type server struct {
-	config        *config.Config
+	config        *config.MasterConf
 	io            drivers.PacketDataSourceCloser
 	stats         stats.Directional
 	isStopped     bool
@@ -30,7 +30,7 @@ type server struct {
 	rxChan        chan gopacket.Packet
 }
 
-func New(cf *config.Config) *server {
+func New(cf *config.MasterConf) *server {
 	return &server{
 		config:        cf,
 		forceQuitChan: make(chan os.Signal, 1),
@@ -42,27 +42,27 @@ func New(cf *config.Config) *server {
 
 func (s *server) Start() (err error) {
 	options := &drivers.DriverOptions{
-		Device:  s.config.Server.Iface,
+		Device:  s.config.Iface,
 		Snaplen: 2048,
 		Filter:  BPFFilter,
 	}
 
-	factory, ok := drivers.Drivers[s.config.Server.Driver]
+	factory, ok := drivers.Drivers[s.config.Driver]
 	if !ok {
-		log.Fatal(fmt.Sprintf("%s Packet driver not supported on this system", s.config.Server.Driver))
+		log.Fatal(fmt.Sprintf("%s Packet driver not supported on this system", s.config.Driver))
 	}
 
 	s.io, err = factory(options)
 	if err != nil {
-		return fmt.Errorf("driver: %s, interface: %s boot error: %s", s.config.Server.Driver, s.config.Server.Iface, err)
+		return fmt.Errorf("driver: %s, interface: %s boot error: %s", s.config.Driver, s.config.Iface, err)
 	}
 
 	//go s.readPackets()
 	s.sendPackets()
 
 	worker_num := 7
-	if s.config.Server.WorkerNum > 0 {
-		worker_num = s.config.Server.WorkerNum
+	if s.config.WorkerNum > 0 {
+		worker_num = s.config.WorkerNum
 	}
 	for i := 0; i < worker_num; i++ {
 		//go packetHandler(i, s.rxChan, s.txChan)
@@ -105,7 +105,7 @@ func (s *server) sendPackets() {
 	gopacket.SerializeLayers(buf, opts, p.Ethernet, p.Ipv4, p.Udp, gopacket.Payload(out))
 
 	start := time.Now()
-	for i := 0; i < 10000000; i++ {
+	for i := 0; i < 10000; i++ {
 		err = s.io.WritePacketData(buf.Bytes())
 		//	if err != nil {
 		//	log.Fatalf("write packet data err : %+v", err)
@@ -115,10 +115,7 @@ func (s *server) sendPackets() {
 		//d.stats.Tx.Bytes += uint64(p.Metadata().CaptureInfo.CaptureLength)
 	}
 	end := time.Now()
-	for i := 0; i < 10000000; i++ {
-	}
-	end1 := time.Now()
-	log.Printf("[INFO] tx pkts = %d, time: %v, %v, err:%s", s.stats.Tx.Packets, end.Sub(start), end1.Sub(end), err)
+	log.Printf("[INFO] tx pkts = %d, time: %v, err:%s", s.stats.Tx.Packets, end.Sub(start), err)
 }
 
 func (s *server) readPackets() {

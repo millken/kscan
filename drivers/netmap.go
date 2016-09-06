@@ -1,3 +1,5 @@
+// +build freebsd
+
 package drivers
 
 import "github.com/google/gopacket"
