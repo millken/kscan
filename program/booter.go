@@ -21,7 +21,6 @@ func RegisterBooter(name string, booter func() interface{}) {
 	if _, ok := booters[name]; ok {
 		log.Fatalln("booter: Register called twice for booter " + name)
 	}
-	log.Printf("Register %s, %v", name, booter)
 
 	booters[name] = booter
 }

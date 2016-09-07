@@ -10,6 +10,7 @@ import (
 
 type MasterConf struct {
 	Iface, Driver string
+	Filter        string
 	WorkerNum     int    `toml:"worker_num"`
 	LogFile       string `toml:"log_file"`
 	LogLevel      string `toml:"log_level"`

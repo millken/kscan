@@ -1,0 +1,13 @@
+[master]
+iface = "enp3s0"
+driver = "libpcap"
+filter = "icmp"
+log_file = ""
+log_level = "FINE"
+#FINE|DEBUG|TRACE|INFO|WARN|ERROR"
+
+[icmp]
+src_mac = "50:46:5d:59:cb:c5"
+dst_mac = "50:da:00:4a:ab:2f"
+src_ip = "192.168.5.106"
+dst_ip = "ip.txt"

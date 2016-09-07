@@ -15,8 +15,6 @@ import (
 	"github.com/millken/kscan/stats"
 )
 
-const BPFFilter = "udp"
-
 type Server struct {
 	Config        *config.MasterConf
 	ProgramConfig config.ProgramConf
@@ -43,7 +41,7 @@ func (s *Server) Start() (err error) {
 	options := &drivers.DriverOptions{
 		Device:  s.Config.Iface,
 		Snaplen: 2048,
-		Filter:  BPFFilter,
+		Filter:  s.Config.Filter,
 	}
 
 	factory, ok := drivers.Drivers[s.Config.Driver]
@@ -56,7 +54,7 @@ func (s *Server) Start() (err error) {
 		return fmt.Errorf("driver: %s, interface: %s boot error: %s", s.Config.Driver, s.Config.Iface, err)
 	}
 
-	//go s.readPackets()
+	go s.readPackets()
 	go s.sendPackets()
 
 	//go packetHandler(i, s.rxChan, s.txChan)
@@ -79,14 +77,20 @@ func (s *Server) sendPackets() {
 			if pkt.Udp != nil {
 				pkt.Udp.SetNetworkLayerForChecksum(pkt.Ipv4)
 				gopacket.SerializeLayers(buf, opts, pkt.Ethernet, pkt.Ipv4, pkt.Udp, gopacket.Payload(pkt.Payload))
-				err = s.io.WritePacketData(buf.Bytes())
-				if err != nil {
-					log.Fatalf("write packet data err : %+v", err)
-				}
-
-				s.stats.Tx.Packets++
+			}
+			if pkt.Tcp != nil {
+				pkt.Tcp.SetNetworkLayerForChecksum(pkt.Ipv4)
+				gopacket.SerializeLayers(buf, opts, pkt.Ethernet, pkt.Ipv4, pkt.Tcp, gopacket.Payload(pkt.Payload))
+			}
+			if pkt.Icmpv4 != nil {
+				gopacket.SerializeLayers(buf, opts, pkt.Ethernet, pkt.Ipv4, pkt.Icmpv4, gopacket.Payload(pkt.Payload))
+			}
+			err = s.io.WritePacketData(buf.Bytes())
+			if err != nil {
+				log.Fatalf("write packet data err : %+v", err)
 			}
 
+			s.stats.Tx.Packets++
 		}
 	}
 	return

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"time"
 
 	"github.com/google/gopacket/examples/util"
 	"github.com/hashicorp/logutils"
@@ -63,5 +64,6 @@ func main() {
 	if err = program.Start(*programName, s); err != nil {
 		log.Printf("[ERROR] :%s", err)
 	}
-
+	//waiting 3 second for receive data
+	time.Sleep(3 * time.Second)
 }

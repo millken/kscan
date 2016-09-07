@@ -2,6 +2,7 @@
 iface = "enp3s0"
 #Interface to listen on
 driver = "libpcap"
+filter = "tcp"
 worker_num = 24
 log_file = ""
 log_level = "FINE"
