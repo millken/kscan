@@ -56,12 +56,12 @@ func main() {
 
 	log.Printf("[DEBUG] master config= %v , mode config = %v,level=%s", cf, mcf, cf.LogLevel)
 
-	s := server.New(cf)
+	s := server.New(cf, mcf)
 	if err = s.Start(); err != nil {
 		log.Printf("[ERROR] :%s", err)
 	}
-
-	if err = program.Start(*programName, mcf); err != nil {
+	if err = program.Start(*programName, s); err != nil {
 		log.Printf("[ERROR] :%s", err)
 	}
+
 }

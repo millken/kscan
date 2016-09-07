@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/BurntSushi/toml"
+	"github.com/millken/kscan/server"
 )
 
 type Booter interface {
-	Init(config map[string]toml.Primitive) error
+	Init(s *server.Server) error
 }
 
 var booters = make(map[string]func() interface{})
@@ -26,10 +26,10 @@ func RegisterBooter(name string, booter func() interface{}) {
 	booters[name] = booter
 }
 
-func Start(name string, mcf map[string]toml.Primitive) (err error) {
+func Start(name string, s *server.Server) (err error) {
 	if b, ok := booters[name]; ok {
 
-		return b().(Booter).Init(mcf)
+		return b().(Booter).Init(s)
 	}
 	return fmt.Errorf("program %s not exist", name)
 }

@@ -15,11 +15,11 @@ type MasterConf struct {
 	LogLevel      string `toml:"log_level"`
 }
 
-type ModeConf map[string]toml.Primitive
+type ProgramConf map[string]toml.Primitive
 
-func Load(configPath string) (masterConfig *MasterConf, modeConfig ModeConf, err error) {
+func Load(configPath string) (masterConfig *MasterConf, programConfig ProgramConf, err error) {
 
-	var configFile ModeConf
+	var configFile ProgramConf
 	p, err := os.Open(configPath)
 	if err != nil {
 		return nil, nil, fmt.Errorf("Error opening config file: %s", err)
@@ -37,7 +37,7 @@ func Load(configPath string) (masterConfig *MasterConf, modeConfig ModeConf, err
 			err = fmt.Errorf("Can't unmarshal master config: %s", err)
 		}
 	}
-	modeConfig = configFile
-	delete(modeConfig, "master")
+	programConfig = configFile
+	delete(programConfig, "master")
 	return
 }

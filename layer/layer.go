@@ -7,4 +7,5 @@ type Packet struct {
 	Ipv4     *layers.IPv4
 	Tcp      *layers.TCP
 	Udp      *layers.UDP
+	Payload  []byte
 }
