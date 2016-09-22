@@ -62,6 +62,27 @@ func (s *Server) Start() (err error) {
 	return
 }
 
+func (s *Server) Send(pkt layer.Packet) (err error) {
+	buf := gopacket.NewSerializeBuffer()
+	opts := gopacket.SerializeOptions{
+		FixLengths:       true,
+		ComputeChecksums: true,
+	}
+	if pkt.Udp != nil {
+		pkt.Udp.SetNetworkLayerForChecksum(pkt.Ipv4)
+		gopacket.SerializeLayers(buf, opts, pkt.Ethernet, pkt.Ipv4, pkt.Udp, gopacket.Payload(pkt.Payload))
+	}
+	if pkt.Tcp != nil {
+		pkt.Tcp.SetNetworkLayerForChecksum(pkt.Ipv4)
+		gopacket.SerializeLayers(buf, opts, pkt.Ethernet, pkt.Ipv4, pkt.Tcp, gopacket.Payload(pkt.Payload))
+	}
+	if pkt.Icmpv4 != nil {
+		gopacket.SerializeLayers(buf, opts, pkt.Ethernet, pkt.Ipv4, pkt.Icmpv4, gopacket.Payload(pkt.Payload))
+	}
+	err = s.io.WritePacketData(buf.Bytes())
+	return
+}
+
 func (s *Server) sendPackets() {
 	var err error
 	defer close(s.TxChan)

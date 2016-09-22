@@ -6,6 +6,7 @@ import (
 	"log"
 	"net"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/BurntSushi/toml"
@@ -14,11 +15,13 @@ import (
 	"github.com/millken/kscan/layer"
 	"github.com/millken/kscan/program"
 	"github.com/millken/kscan/server"
+	"github.com/millken/kscan/utils"
 )
 
 type Boot struct {
 	s   *server.Server
 	pcf proconf
+	dst []string
 }
 
 var cf Config
@@ -27,6 +30,7 @@ var pid = uint16(os.Getpid() & 0xffff)
 func (t *Boot) Init(s *server.Server) (err error) {
 	var srcMac, dstMac net.HardwareAddr
 	var srcIP net.IP
+	var body []byte
 	t.s = s
 	conf := s.ProgramConfig
 	if _, ok := conf[NAME]; !ok {
@@ -52,6 +56,16 @@ func (t *Boot) Init(s *server.Server) (err error) {
 		return fmt.Errorf("ip format error :%s", srcIP)
 	}
 	t.pcf.srcIP = srcIP
+	dstIP := net.ParseIP(cf.DstIp)
+	if dstIP == nil {
+		if body, err = utils.File_Get_Contents(cf.DstIp); err != nil {
+			return fmt.Errorf("dst_ip not cidr or file not exist")
+		} else {
+			t.dst = strings.Split(string(body), "\n")
+		}
+	} else {
+		t.dst = []string{cf.DstIp}
+	}
 
 	go t.readPackets()
 	t.sendPackets()
@@ -118,14 +132,21 @@ func (t *Boot) sendPackets() {
 	}
 
 	p.Payload = make([]byte, 8)
-	hosts, _ := layer.Hosts("42.120.60.0/24")
-	for _, ip := range hosts {
-		now := time.Now().UnixNano()
-		binary.LittleEndian.PutUint64(p.Payload, uint64(now))
+	for _, ips := range t.dst {
 
-		p.Ipv4.DstIP = net.ParseIP(ip)
-		t.s.TxChan <- p
+		hosts, err := layer.Hosts(ips)
+		if err == nil {
+			for _, ip := range hosts {
+				now := time.Now().UnixNano()
+				binary.LittleEndian.PutUint64(p.Payload, uint64(now))
+				p.Ipv4.DstIP = net.ParseIP(ip)
+				if err := t.s.Send(p); err != nil {
+					log.Printf("[ERROR] Send Packet : %s", err)
+				}
+			}
+		}
 	}
+
 }
 
 func init() {

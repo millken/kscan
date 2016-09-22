@@ -51,6 +51,9 @@ func Hosts(cidr string) ([]string, error) {
 	for ip := ip.Mask(ipnet.Mask); ipnet.Contains(ip); inc(ip) {
 		ips = append(ips, ip.String())
 	}
+	if len(ips) == 1 {
+		return ips, nil
+	}
 	// remove network address and broadcast address
 	return ips[1 : len(ips)-1], nil
 }
