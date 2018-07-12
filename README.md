@@ -1,1 +1,2 @@
 # kscan
+Fast scanner
